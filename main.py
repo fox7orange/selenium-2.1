@@ -18,7 +18,7 @@ def find_h1(where):
 def test_example(driver):
     driver.implicitly_wait(2)
     driver.get("http://localhost/litecart/")
-    content = driver.find_element_by_class_name("content")
+    content = driver.find_element_by_css_selector("div.middle > div.content")
     for product in content.find_elements_by_css_selector('li.product'):
         stickers = product.find_elements_by_class_name('sticker')
-        assert len(stickers) != 1
+        assert len(stickers) == 1
