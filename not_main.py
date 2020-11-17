@@ -10,7 +10,7 @@ def driver(request):
 
 
 def get_font_size(text):
-    return text.value_of_css_property('font-size')
+    return float(text.value_of_css_property('font-size').replace('px', ''))
 
 
 def is_gray_crossed(text):
