@@ -1,5 +1,7 @@
 import pytest
 from selenium import webdriver
+import datetime
+from selenium.webdriver.support.ui import Select
 
 
 @pytest.fixture
@@ -55,12 +57,22 @@ def get_product_page_params(driver):
             get_font_size(campaign_price) > get_font_size(price)]
 
 
+def fill_gapes(driver):
+    driver.find_element_by_css_selector('[name="firstname"]').send_keys('Firstname')
+    driver.find_element_by_css_selector('[name="lastname"]').send_keys('Lastname')
+    driver.find_element_by_css_selector('[name="address1"]').send_keys('address')
+    driver.find_element_by_css_selector('[name="postcode"]').send_keys('123456')
+    driver.find_element_by_css_selector('[name="city"]').send_keys('City')
+    country_select = Select(driver.find_element_by_css_selector('select[name="country_code"]'))
+    country_select.select_by_visible_text('United States')
+    driver.find_element_by_css_selector('[name="email"]').send_keys(str(datetime.datetime.now().timestamp()) + '@mail.ru')
+    driver.find_element_by_css_selector('[name="phone"]').send_keys('+71234567890')
+    driver.find_element_by_css_selector('[name="password"]').send_keys('password')
+    driver.find_element_by_css_selector('[name="confirmed_password"]').send_keys('password')
+
+
 def test_10(driver):
-    main_params = get_main_page_params(driver)
-    product_params = get_product_page_params(driver)
-    assert main_params[0] == product_params[0]
-    assert main_params[1] == product_params[1]
-    assert main_params[2] == product_params[2]
-    assert main_params[3] and product_params[3]
-    assert main_params[4] and product_params[4]
-    assert main_params[5] and product_params[5]
+    driver.get('http://localhost/litecart/en/')
+    driver.find_element_by_link_text("New customers click here").click()
+    fill_gapes(driver)
+    driver.find_element_by_css_selector('button[type="submit"]').click()
