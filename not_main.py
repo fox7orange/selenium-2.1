@@ -1,12 +1,17 @@
+import time
+
 import pytest
 from selenium import webdriver
 import datetime
 from selenium.webdriver.support.ui import Select
-
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 @pytest.fixture
 def driver(request):
     wd = webdriver.Chrome()
+    wd.implicitly_wait(5)
     request.addfinalizer(wd.quit)
     return wd
 
@@ -58,21 +63,44 @@ def get_product_page_params(driver):
 
 
 def fill_gapes(driver):
+    time.sleep(0.5)
     driver.find_element_by_css_selector('[name="firstname"]').send_keys('Firstname')
     driver.find_element_by_css_selector('[name="lastname"]').send_keys('Lastname')
     driver.find_element_by_css_selector('[name="address1"]').send_keys('address')
-    driver.find_element_by_css_selector('[name="postcode"]').send_keys('123456')
+    driver.find_element_by_css_selector('[name="postcode"]').send_keys('12345')
     driver.find_element_by_css_selector('[name="city"]').send_keys('City')
     country_select = Select(driver.find_element_by_css_selector('select[name="country_code"]'))
     country_select.select_by_visible_text('United States')
-    driver.find_element_by_css_selector('[name="email"]').send_keys(str(datetime.datetime.now().timestamp()) + '@mail.ru')
+    country_select = Select(WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'select[name="zone_code"]'))))
+    country_select.select_by_visible_text('Alabama')
+
+    email = str(datetime.datetime.now().timestamp()) + '@mail.ru'
+    driver.find_element_by_css_selector('[name="email"]').send_keys(email)
+
     driver.find_element_by_css_selector('[name="phone"]').send_keys('+71234567890')
-    driver.find_element_by_css_selector('[name="password"]').send_keys('password')
-    driver.find_element_by_css_selector('[name="confirmed_password"]').send_keys('password')
+
+    pas = 'password'
+    driver.find_element_by_css_selector('[name="password"]').send_keys(pas)
+    driver.find_element_by_css_selector('[name="confirmed_password"]').send_keys(pas)
+
+    return email, pas
+
+
+def logout(driver):
+    driver.find_element_by_link_text('Logout').click()
+
+
+def login(driver, log, pas):
+    driver.find_element_by_name('email').send_keys(log)
+    driver.find_element_by_name('password').send_keys(pas)
+    driver.find_element_by_name('login').click()
 
 
 def test_10(driver):
-    driver.get('http://localhost/litecart/en/')
+    driver.get('https://litecart.stqa.ru/en/')
     driver.find_element_by_link_text("New customers click here").click()
-    fill_gapes(driver)
+    log, pas = fill_gapes(driver)
     driver.find_element_by_css_selector('button[type="submit"]').click()
+    logout(driver)
+    login(driver, log, pas)
+    logout(driver)
