@@ -114,10 +114,12 @@ def open_main(driver):
     driver.get('https://litecart.stqa.ru/en/')
 
 
-def delete_elements(driver, num: int):
-    for i in range(num):
-        WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.NAME, 'remove_cart_item'))).click()
+def delete_elements(driver):
+    shortcuts_li = driver.find_elements_by_css_selector('ul.shortcuts > li')
+    shortcuts_li[0].click()
+    for i in range(len(shortcuts_li)):
         table = driver.find_elements_by_css_selector('#checkout-summary-wrapper tr')[1]
+        driver.find_element_by_name('remove_cart_item').click()
         WebDriverWait(driver, 5).until(EC.staleness_of(table))
 
 
@@ -126,4 +128,4 @@ def test_10(driver):
         open_main(driver)
         first_product_to_cart(driver, i+1)
     driver.find_element_by_link_text('Checkout »').click()
-    delete_elements(driver, 3)
+    delete_elements(driver)
