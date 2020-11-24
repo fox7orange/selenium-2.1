@@ -7,13 +7,11 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException
-
 
 @pytest.fixture
 def driver(request):
     wd = webdriver.Chrome()
-    wd.implicitly_wait(1)
+    wd.implicitly_wait(5)
     request.addfinalizer(wd.quit)
     return wd
 
@@ -71,10 +69,8 @@ def fill_gapes(driver):
     driver.find_element_by_css_selector('[name="address1"]').send_keys('address')
     driver.find_element_by_css_selector('[name="postcode"]').send_keys('12345')
     driver.find_element_by_css_selector('[name="city"]').send_keys('City')
-    country_select = Select(driver.find_element_by_css_selector('select[name="country_code"]'))
-    country_select.select_by_visible_text('United States')
-    country_select = Select(WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'select[name="zone_code"]'))))
-    country_select.select_by_visible_text('Alabama')
+    driver.find_element_by_css_selector(".select2-selection__arrow").click()
+    driver.find_element_by_css_selector("li.select2-results__option[id$='US']").click()
 
     email = str(datetime.datetime.now().timestamp()) + '@mail.ru'
     driver.find_element_by_css_selector('[name="email"]').send_keys(email)
@@ -98,34 +94,11 @@ def login(driver, log, pas):
     driver.find_element_by_name('login').click()
 
 
-def first_product_to_cart(driver, num: int):
-    driver.find_element_by_class_name('product').click()
-    try:
-        size_select = Select(driver.find_element_by_name('options[Size]'))
-    except NoSuchElementException:
-        size_select = False
-    if size_select:
-        size_select.select_by_index(1)
-    driver.find_element_by_name("add_cart_product").click()
-    WebDriverWait(driver, 5).until(EC.text_to_be_present_in_element((By.CSS_SELECTOR, '#cart span.quantity'), f'{num}'))
-
-
-def open_main(driver):
-    driver.get('https://litecart.stqa.ru/en/')
-
-
-def delete_elements(driver):
-    shortcuts_li = driver.find_elements_by_css_selector('ul.shortcuts > li')
-    shortcuts_li[0].click()
-    for i in range(len(shortcuts_li)):
-        table = driver.find_elements_by_css_selector('#checkout-summary-wrapper tr')[1]
-        driver.find_element_by_name('remove_cart_item').click()
-        WebDriverWait(driver, 5).until(EC.staleness_of(table))
-
-
 def test_10(driver):
-    for i in range(3):
-        open_main(driver)
-        first_product_to_cart(driver, i+1)
-    driver.find_element_by_link_text('Checkout »').click()
-    delete_elements(driver)
+    driver.get('https://litecart.stqa.ru/en/')
+    driver.find_element_by_link_text("New customers click here").click()
+    log, pas = fill_gapes(driver)
+    driver.find_element_by_css_selector('button[type="submit"]').click()
+    logout(driver)
+    login(driver, log, pas)
+    logout(driver)
