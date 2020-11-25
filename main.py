@@ -7,11 +7,12 @@ import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import time
 
 
 @pytest.fixture
 def driver(request):
-    wd = webdriver.Firefox()
+    wd = webdriver.Chrome()
     request.addfinalizer(wd.quit)
     return wd
 
@@ -51,14 +52,22 @@ def fill_gapes(driver):
     fill_gapes_prices(driver)
 
 
-def test_zones(driver):
+def test_windows(driver):
     driver.implicitly_wait(5)
-    driver.get("http://localhost/litecart/admin/?app=catalog&doc=catalog")
+    wdw = WebDriverWait(driver, 5)
+    driver.get("http://localhost/litecart/admin/?app=countries&doc=countries")
     driver.find_element_by_name("username").send_keys("admin")
     driver.find_element_by_name("password").send_keys("admin")
     driver.find_element_by_name("login").click()
-    link = driver.find_element_by_link_text('Add New Product')
-    time.sleep(0.5)
-    link.click()
-    fill_gapes(driver)
-    driver.find_element_by_name('save').click()
+    time.sleep(1)
+    driver.find_element_by_link_text('Add New Country').click()
+    links = driver.find_elements_by_class_name('fa-external-link')
+    for link in links:
+        cur_window = driver.current_window_handle
+        windows_now_opened = set(driver.window_handles)
+        link.click()
+        wdw.until(EC.new_window_is_opened(windows_now_opened))
+        driver.switch_to_window((set(driver.window_handles)-windows_now_opened).pop())
+        driver.close()
+        driver.switch_to_window(cur_window)
+
