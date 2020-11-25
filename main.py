@@ -9,10 +9,17 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 
+from selenium.webdriver.support.events import EventFiringWebDriver, AbstractEventListener
+
+
+class MyListener(AbstractEventListener):
+    def after_navigate_to(self, url, driver):
+        assert len(driver.get_log('browser')) == 0, 'There are some logs in browser'
+
 
 @pytest.fixture
 def driver(request):
-    wd = webdriver.Chrome()
+    wd = EventFiringWebDriver(webdriver.Chrome(), MyListener())
     request.addfinalizer(wd.quit)
     return wd
 
@@ -52,22 +59,21 @@ def fill_gapes(driver):
     fill_gapes_prices(driver)
 
 
-def test_windows(driver):
-    driver.implicitly_wait(5)
-    wdw = WebDriverWait(driver, 5)
-    driver.get("http://localhost/litecart/admin/?app=countries&doc=countries")
+def test_logs(driver):
+    driver.implicitly_wait(1)
+    driver.get('http://localhost/litecart/admin/?app=catalog&doc=catalog&category_id=1')
     driver.find_element_by_name("username").send_keys("admin")
     driver.find_element_by_name("password").send_keys("admin")
     driver.find_element_by_name("login").click()
-    time.sleep(1)
-    driver.find_element_by_link_text('Add New Country').click()
-    links = driver.find_elements_by_class_name('fa-external-link')
-    for link in links:
-        cur_window = driver.current_window_handle
-        windows_now_opened = set(driver.window_handles)
-        link.click()
-        wdw.until(EC.new_window_is_opened(windows_now_opened))
-        driver.switch_to_window((set(driver.window_handles)-windows_now_opened).pop())
-        driver.close()
-        driver.switch_to_window(cur_window)
+
+    all_rows = driver.find_elements_by_css_selector(".dataTable tr.row")
+    links_to_products = []
+    name_col = [row.find_element_by_xpath("./td[3]") for row in all_rows]
+    for name in name_col:
+        if len(name.find_elements_by_css_selector('i.fa')) == 0:
+            links_to_products.append(name.find_element_by_css_selector('a').get_attribute('href'))
+
+    for link in links_to_products:
+        driver.get(link)
+
 
