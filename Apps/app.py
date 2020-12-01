@@ -27,3 +27,6 @@ class Application:
     def delete_all_products_from_cart(self):
         self.cart_page.open()
         self.cart_page.delete_all_products()
+
+    def is_any_product_in_cart(self):
+        assert not self.cart_page.is_any_product_in_cart()

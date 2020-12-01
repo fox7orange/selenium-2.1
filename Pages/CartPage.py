@@ -26,3 +26,6 @@ class CartPage:
         table = self.driver.find_elements_by_css_selector('#checkout-summary-wrapper tr')[1]
         self.driver.find_element_by_name('remove_cart_item').click()
         self.wait.until(EC.staleness_of(table))
+
+    def is_any_product_in_cart(self):
+        return len(self.driver.find_elements_by_css_selector('ul.shortcuts > li')) > 0
